@@ -101,7 +101,14 @@ def load_cfg():
         "smtp_timeout_sec": 8,
         "helo_host": "localhost",
         "mail_from": "noreply@localhost",
-        "mx_api": {"enabled": False, "provider": "none", "endpoint": "", "api_key": ""},
+        "mx_api": {
+            "enabled": False,
+            "provider": "none",
+            "endpoint": "",
+            "base_url": "",
+            "api_key": "",
+            "timeout_sec": 12,
+        },
         "ip_identities": [],
     }
     if not CFG_PATH.exists():
