@@ -95,16 +95,30 @@ def gen_candidates(first_name: str, last_name: str, domain: str):
 
 
 def load_cfg():
+    defaults = {
+        "mode_switch": 1,
+        "api_base": "",
+        "smtp_timeout_sec": 8,
+        "helo_host": "localhost",
+        "mail_from": "noreply@localhost",
+        "mx_api": {"enabled": False, "provider": "none", "endpoint": "", "api_key": ""},
+        "ip_identities": [],
+    }
     if not CFG_PATH.exists():
-        return {
-            "mode_switch": 1,
-            "api_base": "",
-            "smtp_timeout_sec": 8,
-            "helo_host": "localhost",
-            "mail_from": "noreply@localhost",
-        }
+        return defaults
     with open(CFG_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
+        raw = json.load(f)
+    cfg = defaults.copy()
+    cfg.update(raw or {})
+    if not isinstance(cfg.get("mx_api"), dict):
+        cfg["mx_api"] = defaults["mx_api"].copy()
+    else:
+        mx = defaults["mx_api"].copy()
+        mx.update(cfg["mx_api"])
+        cfg["mx_api"] = mx
+    if not isinstance(cfg.get("ip_identities"), list):
+        cfg["ip_identities"] = []
+    return cfg
 
 
 def discover_ipv4():
