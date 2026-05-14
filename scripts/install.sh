@@ -2,8 +2,6 @@
 set -euo pipefail
 
 TARGET_DIR="${TARGET_DIR:-/opt/vps-work}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Supports two modes:
 # 1) REPO_URL=https://github.com/user/repo.git BUNDLE_PATH=vps_worker_bundle ./install.sh
@@ -22,6 +20,8 @@ elif [ -n "${REPO_URL:-}" ]; then
   rsync -a "$tmpd/repo/$BUNDLE_PATH/" "$TARGET_DIR/"
 else
   # local mode: run from inside bundle directory
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
   mkdir -p "$TARGET_DIR"
   rsync -a "$ROOT_DIR/" "$TARGET_DIR/"
 fi
