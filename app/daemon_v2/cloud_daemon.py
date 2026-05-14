@@ -412,10 +412,15 @@ def fetch_job_status(job_id: str) -> dict:
 def active_ips() -> list[dict]:
     cfg = load_cfg()
     current = set(discover_ipv4())
+    configured = cfg.get("ip_identities", []) or []
     out = []
-    for x in cfg.get("ip_identities", []):
+    for x in configured:
         if x.get("enabled", True) and x.get("ip") in current:
             out.append({"id": x.get("id"), "ip": x.get("ip"), "subdomain": x.get("subdomain")})
+    # Fallback for fresh installs: if no identities configured, use all discovered global IPv4.
+    if not out and not configured:
+        for idx, ip in enumerate(sorted(current)):
+            out.append({"id": f"auto-{idx+1}", "ip": ip, "subdomain": "localhost"})
     return out
 
 
