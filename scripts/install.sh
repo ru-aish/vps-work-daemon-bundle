@@ -15,9 +15,26 @@ if [ -n "${ARCHIVE_URL:-}" ]; then
 elif [ -n "${REPO_URL:-}" ]; then
   BUNDLE_PATH="${BUNDLE_PATH:-vps_worker_bundle}"
   tmpd="$(mktemp -d)"
-  git clone --depth 1 "$REPO_URL" "$tmpd/repo"
-  mkdir -p "$TARGET_DIR"
-  rsync -a "$tmpd/repo/$BUNDLE_PATH/" "$TARGET_DIR/"
+  if command -v git >/dev/null 2>&1; then
+    git clone --depth 1 "$REPO_URL" "$tmpd/repo"
+    mkdir -p "$TARGET_DIR"
+    rsync -a "$tmpd/repo/$BUNDLE_PATH/" "$TARGET_DIR/"
+  else
+    if [[ "$REPO_URL" =~ ^https://github.com/([^/]+)/([^/.]+)(\.git)?$ ]]; then
+      owner="${BASH_REMATCH[1]}"
+      repo="${BASH_REMATCH[2]}"
+      archive_url="https://github.com/${owner}/${repo}/archive/refs/heads/main.tar.gz"
+      curl -fsSL "$archive_url" -o "$tmpd/repo.tgz"
+      mkdir -p "$tmpd/repo"
+      tar -xzf "$tmpd/repo.tgz" -C "$tmpd/repo" --strip-components=1
+      mkdir -p "$TARGET_DIR"
+      rsync -a "$tmpd/repo/$BUNDLE_PATH/" "$TARGET_DIR/"
+    else
+      echo "git not found and REPO_URL is not a supported GitHub HTTPS URL." >&2
+      echo "Use ARCHIVE_URL=... mode or install git." >&2
+      exit 1
+    fi
+  fi
 else
   # local mode: run from inside bundle directory
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
